@@ -17,7 +17,7 @@ TRUSTME_IMAGE="${TRUSTME_IMAGE_OUT}/trustmeimage.img"
 TRUSTME_DEFAULTCONFIG="trustx-core.conf"
 
 # Set kernel and boot loader
-IMAGE_BOOTLOADER ?= "bcm2835-bootfiles"
+IMAGE_BOOTLOADER ?= "bootfiles"
 
 # for multiconfig container we need rpi variables to be set empty
 RPI_USE_U_BOOT ?= ""
@@ -29,6 +29,7 @@ SDIMG_KERNELIMAGE_raspberrypi2 ?= "kernel7.img"
 SDIMG_KERNELIMAGE_raspberrypi3-64 ?= "kernel8.img"
 
 do_image_trustmerpi[depends] = " \
+    rpi-config:do_deploy \
     ${IMAGE_BOOTLOADER}:do_deploy \
     ${@bb.utils.contains('RPI_USE_U_BOOT', '1', 'u-boot:do_deploy', '',d)} \
     ${@bb.utils.contains('RPI_USE_U_BOOT', '1', 'rpi-u-boot-scr:do_deploy', '',d)} \
@@ -72,18 +73,18 @@ do_rpi_bootpart () {
 	rm -fr "${TRUSTME_BOOTPART_DIR}"
 	install -d "${TRUSTME_BOOTPART_DIR}/tmp"
 
-	cp --dereference "${DEPLOY_DIR_IMAGE}/bcm2835-bootfiles/"* "${TRUSTME_BOOTPART_DIR}"
+	cp --dereference "${DEPLOY_DIR_IMAGE}/${IMAGE_BOOTLOADER}/"* "${TRUSTME_BOOTPART_DIR}"
 	if [ -n "${DTS}" ]; then
 		# Copy board device trees to root folder
 		for dtbf in ${@splitoverlays(d, True)}; do
 			dtb=`basename $dtbf`
-			cp --dereference "${DEPLOY_DIR_IMAGE}/$dtb" "${TRUSTME_BOOTPART_DIR}/$dtb"
+			cp --dereference "${DEPLOY_DIR_IMAGE}/cml-kernel/$dtb" "${TRUSTME_BOOTPART_DIR}/$dtb"
 		done
 		# Copy device tree overlays to dedicated folder
 		mkdir -p "${TRUSTME_BOOTPART_DIR}/overlays"
 		for dtbf in ${@splitoverlays(d, False)}; do
 			dtb=`basename $dtbf`
-			cp --dereference "${DEPLOY_DIR_IMAGE}/$dtb" "${TRUSTME_BOOTPART_DIR}/overlays/$dtb"
+			cp --dereference "${DEPLOY_DIR_IMAGE}/cml-kernel/$dtb" "${TRUSTME_BOOTPART_DIR}/overlays/$dtb"
 		done
 	fi
 	if [ "${RPI_USE_U_BOOT}" = "1" ]; then
