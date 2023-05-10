@@ -1,5 +1,7 @@
+require recipes-kernel/linux/linux-gyroidos.inc
+
 SRC_URI += "\
 	file://trustx-rpi.cfg \
 "
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
