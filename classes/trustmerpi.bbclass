@@ -4,33 +4,18 @@ inherit trustmegeneric
 # Create an partitioned trustme image that can be copied to an SD card
 #
 
-TEST_CERT_DIR = "${TOPDIR}/test_certificates"
-SECURE_BOOT_SIGNING_KEY = "${TEST_CERT_DIR}/ssig_subca.key"
-SECURE_BOOT_SIGNING_CERT = "${TEST_CERT_DIR}/ssig_subca.cert"
-
-TRUSTME_BOOTPART_DIR="${DEPLOY_DIR_IMAGE}/trustme_bootpart"
-TRUSTME_IMAGE_TMP="${DEPLOY_DIR_IMAGE}/tmp_trustmeimage"
-TRUSTME_IMAGE_OUT="${DEPLOY_DIR_IMAGE}/trustme_image"
-
-TRUSTME_IMAGE="${TRUSTME_IMAGE_OUT}/trustmeimage.img"
-
-TRUSTME_DEFAULTCONFIG="trustx-core.conf"
-
 # Set kernel and boot loader
 IMAGE_BOOTLOADER ?= "bootfiles"
 
-# for multiconfig container we need rpi variables to be set empty
-RPI_USE_U_BOOT ?= ""
-KERNEL_DEVICETREE ?= ""
-
 # Kernel image name
-SDIMG_KERNELIMAGE_raspberrypi  ?= "kernel.img"
-SDIMG_KERNELIMAGE_raspberrypi2 ?= "kernel7.img"
-SDIMG_KERNELIMAGE_raspberrypi3-64 ?= "kernel8.img"
+SDIMG_KERNELIMAGE:raspberrypi  ?= "kernel.img"
+SDIMG_KERNELIMAGE:raspberrypi2 ?= "kernel7.img"
+SDIMG_KERNELIMAGE:raspberrypi3-64 ?= "kernel8.img"
 
 do_image_trustmerpi[depends] = " \
-    rpi-config:do_deploy \
-    ${IMAGE_BOOTLOADER}:do_deploy \
+    virtual/kernel:do_deploy \
+    rpi-${IMAGE_BOOTLOADER}:do_deploy \
+    ${@bb.utils.contains('MACHINE_FEATURES', 'armstub', 'armstubs:do_deploy', '' ,d)} \
     ${@bb.utils.contains('RPI_USE_U_BOOT', '1', 'u-boot:do_deploy', '',d)} \
     ${@bb.utils.contains('RPI_USE_U_BOOT', '1', 'rpi-u-boot-scr:do_deploy', '',d)} \
 "
@@ -39,19 +24,8 @@ do_image_trustmerpi[depends] += " ${TRUSTME_GENERIC_DEPENDS} "
 
 do_image_trustmerpi[recrdeps] = "do_build"
 
-def splitoverlays(d, out, ver=None):
-    dts = d.getVar("KERNEL_DEVICETREE")
-    # Device Tree Overlays are assumed to be suffixed by '-overlay.dtb' (4.1.x) or by '.dtbo' (4.4.9+) string and will be put in a dedicated folder
-    if out:
-        overlays = oe.utils.str_filter_out('\S+\-overlay\.dtb$', dts, d)
-        overlays = oe.utils.str_filter_out('\S+\.dtbo$', overlays, d)
-    else:
-        overlays = oe.utils.str_filter('\S+\-overlay\.dtb$', dts, d) + \
-                   " " + oe.utils.str_filter('\S+\.dtbo$', dts, d)
-
-    return overlays
-
 do_rpi_bootpart () {
+	rm -fr ${TRUSTME_BOOTPART_DIR}
 
 	if [ -z "${DEPLOY_DIR_IMAGE}" ];then
 		bbfatal "Cannot get bitbake variable \"DEPLOY_DIR_IMAGE\""
@@ -63,7 +37,7 @@ do_rpi_bootpart () {
 		exit 1
 	fi
 	# Check if we are building with device tree support
-	DTS="${KERNEL_DEVICETREE}"
+	DTS="${@make_dtb_boot_files(d)}"
 
 	bbnote "Copying boot partition files to ${TRUSTME_BOOTPART_DIR}"
 
@@ -74,19 +48,27 @@ do_rpi_bootpart () {
 	install -d "${TRUSTME_BOOTPART_DIR}/tmp"
 
 	cp --dereference "${DEPLOY_DIR_IMAGE}/${IMAGE_BOOTLOADER}/"* "${TRUSTME_BOOTPART_DIR}"
+
+	if [ "${@bb.utils.contains("MACHINE_FEATURES", "armstub", "1", "0", d)}" = "1" ]; then
+		cp --dereference "${DEPLOY_DIR_IMAGE}/armstubs/${ARMSTUB}" "${TRUSTME_BOOTPART_DIR}"
+	fi
+
 	if [ -n "${DTS}" ]; then
-		# Copy board device trees to root folder
-		for dtbf in ${@splitoverlays(d, True)}; do
-			dtb=`basename $dtbf`
-			cp --dereference "${DEPLOY_DIR_IMAGE}/cml-kernel/$dtb" "${TRUSTME_BOOTPART_DIR}/$dtb"
-		done
-		# Copy device tree overlays to dedicated folder
-		mkdir -p "${TRUSTME_BOOTPART_DIR}/overlays"
-		for dtbf in ${@splitoverlays(d, False)}; do
-			dtb=`basename $dtbf`
-			cp --dereference "${DEPLOY_DIR_IMAGE}/cml-kernel/$dtb" "${TRUSTME_BOOTPART_DIR}/overlays/$dtb"
+		# Copy board device trees (including overlays)
+		install -d ${TRUSTME_BOOTPART_DIR}/overlays
+		for entry in ${DTS} ; do
+			# Split entry at optional ';'
+			if [ $(echo "$entry" | grep -c \;) = "0" ] ; then
+			    DEPLOY_FILE="$entry"
+			    DEST_FILENAME="$entry"
+			else
+			    DEPLOY_FILE="$(echo "$entry" | cut -f1 -d\;)"
+			    DEST_FILENAME="$(echo "$entry" | cut -f2- -d\;)"
+			fi
+			cp --dereference "${DEPLOY_DIR_IMAGE}/cml-kernel/${DEPLOY_FILE}" "${TRUSTME_BOOTPART_DIR}/${DEST_FILENAME}"
 		done
 	fi
+
 	if [ "${RPI_USE_U_BOOT}" = "1" ]; then
 		cp --dereference "${DEPLOY_DIR_IMAGE}/u-boot.bin" "${TRUSTME_BOOTPART_DIR}/${SDIMG_KERNELIMAGE}"
 		cp --dereference "${DEPLOY_DIR_IMAGE}/boot.scr" "${TRUSTME_BOOTPART_DIR}/boot.scr"
@@ -108,7 +90,7 @@ do_rpi_bootpart () {
 }
 
 
-IMAGE_CMD_trustmerpi () {
+IMAGE_CMD:trustmerpi () {
 	bbnote  "Using standard trustme partition"
 	do_rpi_bootpart
 	do_build_trustmeimage
