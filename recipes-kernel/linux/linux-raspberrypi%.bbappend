@@ -4,4 +4,4 @@ SRC_URI += "\
 	file://trustx-rpi.cfg \
 "
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/linux-raspberrypi:"
