@@ -1,0 +1,4 @@
+part /boot --source bootimg-partition --fstype=${TRUSTME_BOOTPART_FS} --label boot --active --align 4096 --fixed-size ${TRUSTME_BOOTPART_SIZE}M
+part / --source rootfs  --fstype=${TRUSTME_DATAPART_FS} --label trustme --align ${TRUSTME_TARGET_ALIGN} --extra-space ${TRUSTME_DATAPART_EXTRA_SPACE}M
+
+bootloader --ptable ${TRUSTME_PARTTABLE_TYPE}
