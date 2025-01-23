@@ -1,4 +1,4 @@
-part /boot --source bootimg-partition --fstype=${GYROIDOS_BOOTPART_FS} --label boot --active --align 4096 --fixed-size ${GYROIDOS_BOOTPART_SIZE}M
+part /boot --source ${RPI_WIC_BOOT_PLUGIN} --fstype=${GYROIDOS_BOOTPART_FS} --label boot --active --align 4096 --fixed-size ${GYROIDOS_BOOTPART_SIZE}M
 part / --source rootfs  --fstype=${GYROIDOS_DATAPART_FS} --label gyroidos --align ${GYROIDOS_TARGET_ALIGN} --extra-space ${GYROIDOS_DATAPART_EXTRA_SPACE}M
 
 bootloader --ptable ${GYROIDOS_PARTTABLE_TYPE}
