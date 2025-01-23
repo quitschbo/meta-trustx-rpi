@@ -77,3 +77,10 @@ IMAGE_BOOT_FILES = "${BOOTFILES_DIR_NAME}/* \
                  ${KERNEL_DEPLOYSUBDIR}/${KERNEL_IMAGETYPE_DIRECT}-initramfs-${MACHINE}.bin;${SDIMG_KERNELIMAGE}"
 
 WKS_FILE:${MACHINE} = "gyroidos-cml.raspberrypi.wks.in"
+
+# Secure Boot (RPi4 + RPi5 only)
+# RPi with stock eeprom does not boot from the boot.img for secure boot
+# disable secure boot build by default
+RPI_SECURE_BOOT ?= "0"
+PKI_KEY_SIZE = "${@oe.utils.vartrue('RPI_SECURE_BOOT', '2048', '4096', d)}"
+RPI_WIC_BOOT_PLUGIN = "${@oe.utils.vartrue('RPI_SECURE_BOOT', 'bootimg-partition-rpi-sb', 'bootimg-partition', d)}"
