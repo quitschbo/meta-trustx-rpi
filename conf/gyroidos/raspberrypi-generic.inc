@@ -1,20 +1,21 @@
 INITRAMFS_IMAGE_BUNDLE = "1"
-INITRAMFS_IMAGE = "trustx-cml-initramfs"
+INITRAMFS_IMAGE = "gyroidos-cml-initramfs"
 
-TRUSTME_FSTYPES = "wic wic.bmap"
-TRUSTME_BOOTPART_FS = "vfat"
-TRUSTME_PARTTABLE_TYPE = "msdos"
+GYROIDOS_FSTYPES = "wic wic.bmap"
+GYROIDOS_BOOTPART_FS = "vfat"
+GYROIDOS_PARTTABLE_TYPE = "msdos"
 
-TRUSTME_TARGET_ALIGN = "4096"
+GYROIDOS_TARGET_ALIGN = "4096"
 
-TRUSTME_HARDWARE = "arm"
-TRUSTME_LOGTTY = "tty11"
+GYROIDOS_HARDWARE = "arm"
+GYROIDOS_LOGTTY = "tty11"
 
 PACKAGE_CLASSES = "package_ipk"
 BBMULTICONFIG = "container"
 
 PREFERRED_PROVIDER_virtual/kernel:${MACHINE} ?= "linux-raspberrypi-dev"
 PREFERRED_PROVIDER_virtual/kernel:gyroidos-cml ?= "linux-raspberrypi-dev"
+PREFERRED_PROVIDER_virtual/kernel:gyroidos-core = "linux-dummy"
 #PREFERRED_VERSION_linux-raspberrypi = "5.15.%"
 LINUX_VERSION := "6.12.y"
 LINUX_RPI_BRANCH := "rpi-6.12.y"
@@ -75,4 +76,4 @@ IMAGE_BOOT_FILES = "${BOOTFILES_DIR_NAME}/* \
                  ${@make_dtb_boot_files(d)} \
                  ${KERNEL_DEPLOYSUBDIR}/${KERNEL_IMAGETYPE_DIRECT}-initramfs-${MACHINE}.bin;${SDIMG_KERNELIMAGE}"
 
-WKS_FILE:${MACHINE} = "trustx-cml.raspberrypi.wks.in"
+WKS_FILE:${MACHINE} = "gyroidos-cml.raspberrypi.wks.in"
