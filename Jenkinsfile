@@ -2,7 +2,7 @@ pipeline {
 	agent any
 
 	parameters {
-		string(name: 'PR_BRANCHES', defaultValue: '', description: 'Comma separated list of additional pull request branches (e.g. meta-trustx=PR-177,meta-trustx-rpi=PR-2,gyroidos_build=PR-97)')
+		string(name: 'PR_BRANCHES', defaultValue: '', description: 'Comma separated list of additional pull request branches (e.g. meta-gyroidos=PR-177,meta-gyroidos-rpi=PR-2,gyroidos_build=PR-97)')
 	}
 
 	stages {
