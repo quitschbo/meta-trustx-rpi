@@ -5,6 +5,9 @@ MACHINEOVERRIDES =. "raspberrypi4-64:"
 
 GYROIDOS_CONTAINER_ARCH = "qemuarm64"
 
+# enable compressed kernel image
+KERNEL_IMAGETYPE_DIRECT = "Image.gz"
+
 # if SERIAL_CONSOLES is set and ENABLE_UART is false, getty will flood
 # the LOGTTY with error messages. Clear SERIAL_CONSOLES to silence errors.
 python () {

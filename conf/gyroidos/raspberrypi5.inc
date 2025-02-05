@@ -5,6 +5,9 @@ MACHINEOVERRIDES =. "raspberrypi5:"
 
 GYROIDOS_CONTAINER_ARCH = "qemuarm64"
 
+# enable compressed kernel image
+KERNEL_IMAGETYPE_DIRECT = "Image.gz"
+
 # currently not included by meta-raspberrypi
 RPI_KERNEL_DEVICETREE:append = " broadcom/bcm2712-rpi-500.dtb"
 
