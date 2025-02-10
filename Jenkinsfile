@@ -6,7 +6,7 @@ pipeline {
 	}
 
 	stages {
-		stage('build GyroidOS') {
+		stage('prepare vars') {
 			steps {
 				script {
 					REPO_NAME = determineRepoName()
@@ -23,20 +23,34 @@ pipeline {
 						BASE_BRANCH = env.BRANCH_NAME
 					}
 				}
+			}
+		}
 
-				build job: "../gyroidos/${BASE_BRANCH}", wait: true, parameters: [
-					string(name: "PR_BRANCHES", value: "${REPO_NAME}=${env.BRANCH_NAME},${env.PR_BRANCHES}"),
-					string(name: "GYROID_ARCH", value: "arm64"),
-					string(name: "GYROID_MACHINE", value: "raspberrypi3-64"),
-					string(name: "BUILD_INSTALLER", value: "n")
-				]
+		stage ('build GyroidOS') {
+			parallel {
+				stage ('Raspberry Pi 3 64 bit') {
+					steps {
 
-				build job: "../gyroidos/${BASE_BRANCH}", wait: true, parameters: [
-					string(name: "PR_BRANCHES", value: "${REPO_NAME}=${env.BRANCH_NAME},${env.PR_BRANCHES}"),
-					string(name: "GYROID_ARCH", value: "arm32"),
-					string(name: "GYROID_MACHINE", value: "raspberrypi2"),
-					string(name: "BUILD_INSTALLER", value: "n")
-				]
+						build job: "../gyroidos/${BASE_BRANCH}", wait: true, parameters: [
+							string(name: "PR_BRANCHES", value: "${REPO_NAME}=${env.BRANCH_NAME},${env.PR_BRANCHES}"),
+							string(name: "GYROID_ARCH", value: "arm64"),
+							string(name: "GYROID_MACHINE", value: "raspberrypi3-64"),
+							string(name: "BUILD_INSTALLER", value: "n")
+						]
+					}
+				}
+
+				stage ('Raspberry Pi 2 32 bit') {
+					steps {
+
+						build job: "../gyroidos/${BASE_BRANCH}", wait: true, parameters: [
+							string(name: "PR_BRANCHES", value: "${REPO_NAME}=${env.BRANCH_NAME},${env.PR_BRANCHES}"),
+							string(name: "GYROID_ARCH", value: "arm32"),
+							string(name: "GYROID_MACHINE", value: "raspberrypi2"),
+							string(name: "BUILD_INSTALLER", value: "n")
+						]
+					}
+				}
 			}
 		}
 	}
